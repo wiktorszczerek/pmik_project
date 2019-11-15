@@ -25,6 +25,7 @@
 
 #include "wifi_handler.h"
 #include "gpio_adc.h"
+#include "dht11.h"
 
 static const char *TAG = "Main";
 
