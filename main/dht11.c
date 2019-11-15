@@ -9,6 +9,7 @@
 #include "rom/ets_sys.h"
 
 #include "dht11.h"
+#include "functions.h"
 
 float temperature = 0;
 float humidity = 0;
@@ -32,7 +33,7 @@ int dht11_check_level_over_period(int us, int level)
 int dht11_start()
 {
 	gpio_pullup_en(DHT11_PIN);
-	vTaskDelay(DHT11_INTERVAL/portTICK_PERIOD_MS);
+	vTaskDelay(DHT11_INTERVAL/portTICK_PERIOD_MS); //vtaskdelay as we should leave some time ofr other guys :D
 	gpio_set_direction(DHT11_PIN,GPIO_MODE_OUTPUT);
 	gpio_set_level(DHT11_PIN,0);
 	ets_delay_us(20 * 1000);
@@ -46,10 +47,7 @@ int dht11_start()
 	return DHT11_OK;
 }
 
-uint8_t make_byte_from_bits(uint8_t* arr)
-{
-	return ((arr[0]!=0)<<7 | (arr[1]!=0) << 6 | (arr[2]!=0) << 5 | (arr[3]!=0) << 4 | (arr[4]!=0) << 3 | (arr[5]!=0) << 2 | (arr[6]!=0) << 1 | (arr[7]!=0) << 0);
-}
+
 
 
 int dht11_process_data()
@@ -71,7 +69,7 @@ int dht11_process_data()
 	if(data_uint[0]+data_uint[1]+data_uint[2]+data_uint[3] != data_uint[4]) return DHT11_CHECKSUM_ERROR;
 	
 	temperature = data_uint[2];
-	if(data_uint[3] & 0x80)
+	if(data_uint[3] & 0x80) // data & 01000000 -> dont really get this
 	{
 		temperature = -1 - temperature;
 	}
@@ -84,12 +82,6 @@ int dht11_process_data()
 
 void dht11_listener(void * ignore)
 {
-	while(dht11_start() != DHT11_OK) 
-	{
-		ESP_LOGE("DHT11","Unsuccessful setup! Trying to connect again...");
-		vTaskDelay(DHT11_INTERVAL/portTICK_PERIOD_MS);
-	}
-	dht11_process_data();	
 	while(1)
 	{
 		while(dht11_start() != DHT11_OK) 

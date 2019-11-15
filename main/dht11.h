@@ -1,5 +1,5 @@
-#ifndef __DHT11
-#define __DHT11
+#ifndef __DHT11_H
+#define __DHT11_H
 
 #define DHT11_PIN GPIO_NUM_17
 #define DHT11_INTERVAL 1200 //1.2 sec interval, everything should be okay after this time
