@@ -4,12 +4,42 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "driver/adc.h"
+#include "dirver/i2c.h"
 #include "esp_adc_cal.h"
 #include "esp_log.h"
 #include "rom/ets_sys.h"
 
 #include "wifi_handler.c"
 #include "gpio_adc.h"
+
+
+/*
+				I2C
+*/
+#define I2C_SCL_PIN GPIO_NUM_22
+#define I2C_SDA_PIN GPIO_NUM_21
+#define I2C_CLOCK_FREQ 1000000 //max is 1MHz
+
+
+i2c_config_t i2c_config;
+
+void i2c_init_master()
+{
+	i2c_config = 
+	{
+		.mode = I2C_MODE_MASTER,
+		.sda_io_num = I2C_SDA_PIN,
+		.scl_io_num = I2C_SCL_PIN,
+		.sda_pullup_en = GPIO_PULLUP_ENABLE,
+		.scl_pullup_en = GPIO_PULLUP_ENABLE,
+		.clk_speed = I2C_CLOCK_FREQ,
+	
+	
+	
+	}
+
+}
+
 
 
 /*

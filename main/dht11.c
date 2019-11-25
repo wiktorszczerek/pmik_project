@@ -1,4 +1,4 @@
-#include <stdio.h>
+s#include <stdio.h>
 #include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -22,7 +22,7 @@ int dht11_check_level_over_period(int us, int level)
 	{
 		diff = (uint64_t)esp_timer_get_time() - tick;
 	}
-	if(diff > (us+US_SAFE_VALUE))
+	if(diff > (us))
 	{
 		ESP_LOGE("time was","%d",diff);
 		return -1;
@@ -36,13 +36,13 @@ int dht11_start()
 	vTaskDelay(DHT11_INTERVAL/portTICK_PERIOD_MS); //vtaskdelay as we should leave some time ofr other guys :D
 	gpio_set_direction(DHT11_PIN,GPIO_MODE_OUTPUT);
 	gpio_set_level(DHT11_PIN,0);
-	ets_delay_us(20 * 1000);
+	ets_delay_us(20 * 1000); //busy-waiting. Not really good, but we have to wait for exactly 20us. Same for every other use of this fun.
 	gpio_set_level(DHT11_PIN,1);
 	gpio_set_direction(DHT11_PIN,GPIO_MODE_INPUT);
 	ets_delay_us(40);
-	if(dht11_check_level_over_period(80,0) == -1)
+	if(dht11_check_level_over_period(80+SAFE_VALUE,0) == -1)
 		return DHT11_TIME_EXCEEDED;
-	if(dht11_check_level_over_period(80,1) == -1)
+	if(dht11_check_level_over_period(80+SAFE_VALUE,1) == -1)
 		return DHT11_TIME_EXCEEDED;
 	return DHT11_OK;
 }
@@ -69,7 +69,7 @@ int dht11_process_data()
 	if(data_uint[0]+data_uint[1]+data_uint[2]+data_uint[3] != data_uint[4]) return DHT11_CHECKSUM_ERROR;
 	
 	temperature = data_uint[2];
-	if(data_uint[3] & 0x80) // data & 01000000 -> dont really get this
+	if(data_uint[3] & 0x80)
 	{
 		temperature = -1 - temperature;
 	}
