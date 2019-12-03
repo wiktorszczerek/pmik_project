@@ -26,6 +26,7 @@
 #include "wifi_handler.h"
 #include "gpio_adc.h"
 #include "dht11.h"
+#include <i2cdev.h>
 
 static const char *TAG = "Main";
 
@@ -33,6 +34,7 @@ TaskHandle_t x_button = NULL;
 TaskHandle_t x_adc = NULL;
 TaskHandle_t x_dht11 = NULL;
 TaskHandle_t x_temp = NULL; //for deleting previous ones
+TaskHandle_t x_bmp280 = NULL;
 
 
 void app_main()
@@ -55,14 +57,16 @@ void app_main()
 	vTaskDelay(2000 / portTICK_PERIOD_MS);
     
   //  start_socket_client();
-    
     gpio_setup();
     adc_setup();
+    
+    ESP_ERROR_CHECK(i2cdev_init()); //from esp-idf-lib
     
     ESP_LOGI(TAG,"Creating listeners");
     //xTaskCreate(button_listener,"button",5*1024,NULL,10,&x_button);
     //xTaskCreate(adc_listener,"adc",5*1024,NULL,10,&x_adc);
     xTaskCreate(dht11_listener,"dht11",5*1024,NULL,10,&x_dht11);
+    xTaskCreate(bmp280_listener,"bmp280",5*1024,NULL,tskIDLE_PRIORITY,&x_bmp280);
     
     while(1)
     {

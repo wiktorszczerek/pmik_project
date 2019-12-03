@@ -4,42 +4,35 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "driver/adc.h"
-#include "dirver/i2c.h"
+#include "driver/i2c.h"
 #include "esp_adc_cal.h"
 #include "esp_log.h"
 #include "rom/ets_sys.h"
 
 #include "wifi_handler.c"
 #include "gpio_adc.h"
+#include <bmp280.h> //as a part of esp-idf-lib
 
+
+static const char *gpTAG = "GPIO_ADC_C";
 
 /*
 				I2C
 */
-#define I2C_SCL_PIN GPIO_NUM_22
-#define I2C_SDA_PIN GPIO_NUM_21
-#define I2C_CLOCK_FREQ 1000000 //max is 1MHz
-
-
-i2c_config_t i2c_config;
 
 void i2c_init_master()
 {
-	i2c_config = 
-	{
+	i2c_config_t i2c_config = {
 		.mode = I2C_MODE_MASTER,
 		.sda_io_num = I2C_SDA_PIN,
 		.scl_io_num = I2C_SCL_PIN,
 		.sda_pullup_en = GPIO_PULLUP_ENABLE,
 		.scl_pullup_en = GPIO_PULLUP_ENABLE,
-		.clk_speed = I2C_CLOCK_FREQ,
-	
-	
-	
-	}
-
+		.master.clk_speed = I2C_CLOCK_FREQ
+	};
+	i2c_param_config(I2C_NUM_0,&i2c_config);
+	i2c_driver_install(I2C_NUM_0,I2C_MODE_MASTER,0,0,0);
 }
-
 
 
 /*
@@ -143,6 +136,35 @@ void adc_listener(void * ignore)
  }
 }
 
+void bmp280_listener(void* pv)
+{
+    bmp280_params_t params;
+    bmp280_init_default_params(&params); //we don't want anything extra
+    bmp280_t bmp280_type;
+    memset(&bmp280_type,0,sizeof(bmp280_t)); //zero the structure!
+    
+    ESP_ERROR_CHECK(bmp280_init_desc(&bmp280_type,BMP280_I2C_ADDRESS_0,0,I2C_SDA_PIN,I2C_SCL_PIN));
+    //ESP_ERROR_CHECK(bmp280_init(&bmp280_type,&params)); sth is wrong with the library, ignoring for now
+    bmp280_init(&bmp280_type,&params);
+    ESP_LOGI(gpTAG,"Found BMx280 device: %s",(bmp280_type.id == BME280_CHIP_ID)?"BME280":"BMP280"); //in BME there is humidity sensor instead of pressure
+   
+    float pressure, temperature, dummy;
+    float pressure_holder;
+    while(1)
+    {
+        if (bmp280_read_float(&bmp280_type, &temperature, &pressure,&dummy) != ESP_OK)
+        {
+            printf("Temperature/pressure reading failed\n");
+            continue;
+        }
+        else 
+        {
+            pressure_holder=pressure/100;
+            ESP_LOGE("Read values","temp: %.2f C // pres: %.2f hPa",temperature,pressure_holder);
+        }
+        vTaskDelay(2000/portTICK_PERIOD_MS);
+    }
+}
 
 
 

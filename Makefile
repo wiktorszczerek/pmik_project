@@ -3,7 +3,9 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := hello-world
+PROJECT_NAME := weather-station-AK-WS
+
+EXTRA_COMPONENT_DIRS := ./components
 
 include $(IDF_PATH)/make/project.mk
 

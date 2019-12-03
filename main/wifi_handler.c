@@ -159,7 +159,7 @@ void start_socket_client()
 {
 	rx_data = (char *) calloc(RX_BUFFSIZE_BYTES,sizeof(char));
 	
-	xTaskCreate(socket_client, "socket_task", 1024*20, NULL, tskIDLE_PRIORITY, &socket_client_handle);
+	xTaskCreate(socket_client, "socket_task", 1024*5, NULL, tskIDLE_PRIORITY, &socket_client_handle);
 	configASSERT(socket_client_handle);
 	
 }
